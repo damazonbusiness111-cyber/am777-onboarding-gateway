@@ -93,7 +93,136 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('AM777 Onboarding')
     .addItem('Send Onboarding Package for Selected Row', 'sendOnboardingPackage')
+    .addSeparator()
+    .addItem('Format Sheets (dropdowns, colors, freeze header)', 'enhanceCrmUX')
+    .addItem('Rebuild "Start Here" Guide Tab', 'buildStartHereTab')
     .addToMenu();
+}
+
+var CRM_STATUS_OPTIONS = ['Submitted', 'Under Review', 'Qualified', 'Approved Pending Funding', 'Active', 'Paused', 'Rejected', 'Archived'];
+
+// Status -> background color, used for both the dropdown chips (via
+// conditional formatting) and quick visual scanning of a tab.
+var CRM_STATUS_COLORS = {
+  'Submitted': '#F1F3F4',
+  'Under Review': '#FFF3CD',
+  'Qualified': '#D2E3FC',
+  'Approved Pending Funding': '#FFE0B2',
+  'Active': '#C8E6C9',
+  'Paused': '#E0E0E0',
+  'Rejected': '#F8D7DA',
+  'Archived': '#D6D6D6'
+};
+
+// One-click formatting pass: dropdown validation + color-coded conditional
+// formatting on CRM Status, frozen header row, and sensible column widths —
+// makes each submission tab behave like a real CRM board instead of a raw
+// data dump. Safe to re-run any time; it only re-applies formatting rules,
+// it never touches actual submission data.
+function enhanceCrmUX() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+
+  Object.values(ROUTE_MAP).forEach(function (route) {
+    var sheet = ss.getSheetByName(route.tab);
+    if (!sheet) return;
+
+    var lastCol = sheet.getLastColumn();
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var statusColIdx = headers.indexOf('CRM Status') + 1;
+    if (!statusColIdx) return; // run addReviewColumns() first if this tab predates it
+
+    sheet.setFrozenRows(1);
+
+    var maxRows = Math.max(sheet.getMaxRows(), 200);
+    var statusRange = sheet.getRange(2, statusColIdx, maxRows - 1, 1);
+
+    // Dropdown validation
+    var rule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(CRM_STATUS_OPTIONS, true)
+      .setAllowInvalid(false)
+      .setHelpText('Pick a status — this drives what the Send Package menu will warn you about.')
+      .build();
+    statusRange.setDataValidation(rule);
+
+    // Color-coded conditional formatting, one rule per status value
+    var rules = CRM_STATUS_OPTIONS.map(function (status) {
+      return SpreadsheetApp.newConditionalFormatRule()
+        .whenTextEqualTo(status)
+        .setBackground(CRM_STATUS_COLORS[status])
+        .setRanges([statusRange])
+        .build();
+    });
+    sheet.setConditionalFormatRules(rules);
+
+    // Reasonable column widths so long fields (JSON, signature links) don't
+    // dominate the view.
+    for (var c = 1; c <= lastCol; c++) {
+      var header = headers[c - 1];
+      if (header === 'Extra Fields (JSON)' || header === 'Signature Image Link' || header === 'Confirm Statement') {
+        sheet.setColumnWidth(c, 220);
+      } else {
+        sheet.setColumnWidth(c, 140);
+      }
+    }
+  });
+
+  Logger.log('CRM formatting applied to all submission tabs.');
+}
+
+// Creates (or replaces) a "Start Here" tab as the first tab in the workbook —
+// a plain-language operating guide for whoever opens this Sheet, so nothing
+// about the review/send workflow has to be re-explained from scratch.
+function buildStartHereTab() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var tabName = 'Start Here';
+  var existing = ss.getSheetByName(tabName);
+  if (existing) ss.deleteSheet(existing);
+
+  var sheet = ss.insertSheet(tabName, 0);
+  sheet.setTabColor('#459DFB');
+  sheet.setColumnWidth(1, 40);
+  sheet.setColumnWidth(2, 640);
+
+  var rows = [
+    ['', 'AM777 ONBOARDING GATEWAY — HOW THIS CRM WORKS'],
+    ['', ''],
+    ['', 'This Sheet is private. Applicants never see any tab here — they only ever see the public onboarding form. Everything below is for AM777 admin review only.'],
+    ['', ''],
+    ['', '1. A NEW SUBMISSION COMES IN'],
+    ['', 'When someone completes the onboarding gateway form, it lands automatically in ONE of the 5 route tabs below (VA / Admin / Perks / Funder / Formal Capital Inquiry) and also gets logged in "Onboarding Master Log" for a quick cross-route overview.'],
+    ['', ''],
+    ['', '2. REVIEW THE ROW'],
+    ['', 'Open the correct route tab. Read Full Name, Email, and the "Extra Fields (JSON)" column — that holds every answer specific to their route (budget, experience, perk tier, proposed terms, etc).'],
+    ['', ''],
+    ['', '3. SET THE CRM STATUS'],
+    ['', 'Click the "CRM Status" cell for that row and pick from the dropdown: Submitted -> Under Review -> then one of Qualified / Approved Pending Funding / Active, or Paused / Rejected / Archived if it is not moving forward. Colors update automatically so you can scan a tab at a glance.'],
+    ['', ''],
+    ['', '4. SEND THE PACKAGE (once Qualified or Approved)'],
+    ['', 'Click anywhere in that applicant\'s row, then use the menu: AM777 Onboarding -> Send Onboarding Package for Selected Row. It automatically attaches the correct PDF set for their route, emails the applicant, and logs "PDF Package Sent", "Date Sent", and "Reviewed By" for you. Nothing sends on its own — this is always a manual click.'],
+    ['', ''],
+    ['', '5. IMPORTANT — FORMAL CAPITAL INQUIRY ROUTE'],
+    ['', 'This route is manual review only. Sending its reference PDF does not approve funding terms or create any arrangement. Never treat a Capital Inquiry row as approved without an actual conversation first.'],
+    ['', ''],
+    ['', '6. USE "NEXT ACTION" FOR YOUR OWN NOTES'],
+    ['', 'Free text — write what you are waiting on or what happens next for that applicant, so nothing falls through the cracks.'],
+    ['', ''],
+    ['', 'TAB GUIDE'],
+    ['', 'Onboarding Master Log = every submission across all 5 routes, one row each, for a fast overview.'],
+    ['', 'VA / Admin / Perks / Funder / Formal Capital Inquiry tabs = full detail per route, plus your CRM Status / PDF Package Sent / Date Sent / Reviewed By / Next Action columns.'],
+    ['', 'Remaining tabs (Funded Initiatives, Qualified Revenue, Payout Tracker, etc.) = your own downstream tracking once someone is Active — not auto-filled by the form.'],
+    ['', ''],
+    ['', 'If a tab ever looks unformatted (no dropdown, no colors), open the "AM777 Onboarding" menu and click "Format Sheets" — safe to re-run any time.']
+  ];
+
+  sheet.getRange(1, 1, rows.length, 2).setValues(rows);
+  sheet.getRange(1, 2).setFontSize(15).setFontWeight('bold');
+  [5, 8, 11, 14, 17, 20, 22].forEach(function (r) {
+    sheet.getRange(r, 2).setFontWeight('bold');
+  });
+  sheet.getRange(3, 2).setFontStyle('italic').setFontColor('#B00020');
+  sheet.setRowHeights(1, rows.length, 24);
+
+  Logger.log('Start Here tab rebuilt.');
 }
 
 // route key -> { displayName, fileIds: [Drive file IDs to attach] }
