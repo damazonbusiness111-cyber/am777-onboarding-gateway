@@ -96,7 +96,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Format Sheets (dropdowns, colors, freeze header)', 'enhanceCrmUX')
     .addItem('Rebuild "Start Here" Guide Tab', 'buildStartHereTab')
-    .addToMenu();
+    .addToUi();
 }
 
 var CRM_STATUS_OPTIONS = ['Submitted', 'Under Review', 'Qualified', 'Approved Pending Funding', 'Active', 'Paused', 'Rejected', 'Archived'];
