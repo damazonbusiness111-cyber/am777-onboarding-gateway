@@ -49,6 +49,10 @@ var ALL_TABS = [
   'Reports'
 ];
 
+// Appended to every submission tab's header row — the admin-only review
+// columns applicants never see (they're the backend CRM, not the form).
+var REVIEW_COLUMNS = ['CRM Status', 'PDF Package Sent', 'Date Sent', 'Reviewed By', 'Next Action'];
+
 function setupSheets() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   ALL_TABS.forEach(function (tabName) {
@@ -57,12 +61,137 @@ function setupSheets() {
       if (tabName === MASTER_LOG_TAB) {
         sheet.appendRow(['Record ID', 'Route', 'Full Name', 'Email', 'Mobile', 'Location', 'Submitted At']);
       } else if (Object.values(ROUTE_MAP).some(function (r) { return r.tab === tabName; })) {
-        sheet.appendRow(['Record ID', 'Timestamp', 'Full Name', 'Email', 'Mobile', 'Location', 'Facebook/Profile Link', 'Typed Signature', 'Signature Image Link', 'Confirm Statement', 'Extra Fields (JSON)']);
+        sheet.appendRow(['Record ID', 'Timestamp', 'Full Name', 'Email', 'Mobile', 'Location', 'Facebook/Profile Link', 'Typed Signature', 'Signature Image Link', 'Confirm Statement', 'Extra Fields (JSON)'].concat(REVIEW_COLUMNS));
       }
       sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).setFontWeight('bold');
     }
   });
   Logger.log('Sheets ready: ' + ALL_TABS.join(', '));
+}
+
+// One-time migration for tabs that already existed before REVIEW_COLUMNS was
+// added — appends the missing headers without disturbing existing data/columns.
+function addReviewColumns() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  Object.values(ROUTE_MAP).forEach(function (route) {
+    var sheet = ss.getSheetByName(route.tab);
+    if (!sheet) return;
+    var lastCol = sheet.getLastColumn();
+    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var missing = REVIEW_COLUMNS.filter(function (c) { return existingHeaders.indexOf(c) === -1; });
+    if (missing.length > 0) {
+      sheet.getRange(1, lastCol + 1, 1, missing.length).setValues([missing]).setFontWeight('bold');
+    }
+  });
+  Logger.log('Review columns synced.');
+}
+
+// Custom Sheet menu — lets admin trigger a package send manually from
+// whichever submission tab + row they have selected. Nothing here fires
+// automatically on status change; every send requires this explicit click.
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('AM777 Onboarding')
+    .addItem('Send Onboarding Package for Selected Row', 'sendOnboardingPackage')
+    .addToMenu();
+}
+
+// route key -> { displayName, fileIds: [Drive file IDs to attach] }
+// File IDs verified against the actual Drive folder as of 2026-07-05 —
+// re-verify if these documents are ever replaced/re-uploaded (Drive assigns
+// a new file ID on replace, not just a new version of the same ID).
+var PACKAGE_MAP = {
+  va: {
+    displayName: 'VA Outreach Collaborator Package',
+    fileIds: ['10M6IyfzdzXPrU9soL4NHKGRm78E9z7bO', '1vVaclwy4YdDELc--M3N87F6p0pc29zxq', '1YV1fzpvEsnO4eCr6aAbOYxIu3ssjxKoO']
+  },
+  admin: {
+    displayName: 'Admin / Operator Package',
+    fileIds: ['1g0flxJlgMNT7ZAks1yTh4_hTKLi4xBJv', '1vVaclwy4YdDELc--M3N87F6p0pc29zxq', '1YV1fzpvEsnO4eCr6aAbOYxIu3ssjxKoO']
+  },
+  perks: {
+    displayName: 'Perks-Based Supporter Package',
+    fileIds: ['1yXij9c_dwjRzpYFkJ25guxzAAFpxm7BA', '1YV1fzpvEsnO4eCr6aAbOYxIu3ssjxKoO']
+  },
+  funder: {
+    displayName: 'Revenue-Share Funder Package',
+    fileIds: ['1wcvQls2TvmwQOzacKRqSn7GGv-myu5wT', '1YR2K6H2Ukc_rI7fs59fZLsdoKzZlNMUs']
+  },
+  capital: {
+    displayName: 'Formal Capital Inquiry Package (manual review only)',
+    fileIds: ['1YR2K6H2Ukc_rI7fs59fZLsdoKzZlNMUs']
+  }
+};
+
+// tab name -> routeType key, so the menu function knows which package
+// applies without needing a separate lookup table.
+var TAB_TO_ROUTE = {};
+Object.keys(ROUTE_MAP).forEach(function (key) { TAB_TO_ROUTE[ROUTE_MAP[key].tab] = key; });
+
+function sendOnboardingPackage() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var routeKey = TAB_TO_ROUTE[sheet.getName()];
+
+  if (!routeKey) {
+    ui.alert('Wrong tab', 'Run this from one of the 5 submission tabs (VA/Admin/Perks/Funder/Capital), not "' + sheet.getName() + '".', ui.ButtonSet.OK);
+    return;
+  }
+
+  var row = sheet.getActiveRange().getRow();
+  if (row < 2) {
+    ui.alert('Select a data row', 'Click a cell in the applicant\'s row (not the header row) before running this.', ui.ButtonSet.OK);
+    return;
+  }
+
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  function col(name) { return headers.indexOf(name) + 1; }
+
+  var recordId = sheet.getRange(row, col('Record ID')).getValue();
+  var fullName = sheet.getRange(row, col('Full Name')).getValue();
+  var email = sheet.getRange(row, col('Email')).getValue();
+  var crmStatus = col('CRM Status') ? sheet.getRange(row, col('CRM Status')).getValue() : '';
+
+  if (!email) {
+    ui.alert('No email on this row', 'Record ' + recordId + ' has no email address — cannot send.', ui.ButtonSet.OK);
+    return;
+  }
+
+  var pkg = PACKAGE_MAP[routeKey];
+  var warningLine = '';
+  if (routeKey === 'capital') {
+    warningLine = '\n\n⚠ FORMAL CAPITAL INQUIRY — manual review only. Sending this does NOT approve funding terms, create an arrangement, or confirm acceptance. Confirm you intend to send the transparency/review-process reference only.';
+  }
+  if (crmStatus && ['Qualified', 'Approved Pending Funding', 'Active'].indexOf(crmStatus) === -1) {
+    warningLine += '\n\n⚠ Current CRM Status is "' + crmStatus + '" — packages are normally sent only at Qualified/Approved. Sending anyway if you confirm.';
+  }
+
+  var confirm = ui.alert(
+    'Send ' + pkg.displayName + '?',
+    'Record: ' + recordId + '\nName: ' + fullName + '\nEmail: ' + email + '\nFiles: ' + pkg.fileIds.length + warningLine,
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (confirm !== ui.Button.OK) return;
+
+  var attachments = pkg.fileIds.map(function (id) { return DriveApp.getFileById(id).getBlob(); });
+
+  MailApp.sendEmail({
+    to: email,
+    subject: 'AM777 — Your ' + pkg.displayName + ' (' + recordId + ')',
+    body:
+      'Hi ' + (fullName || 'there') + ',\n\n' +
+      'Attached is your ' + pkg.displayName + ' following review of your AM777 onboarding submission (Record ID: ' + recordId + ').\n\n' +
+      'Please read through the attached document(s) — they cover your role/support terms, next steps, and what is and isn\'t guaranteed at this stage.\n\n' +
+      '— AM777 Automation Solutions\n' +
+      'Part of the InfraMind777 ecosystem',
+    attachments: attachments
+  });
+
+  if (col('PDF Package Sent')) sheet.getRange(row, col('PDF Package Sent')).setValue(pkg.displayName);
+  if (col('Date Sent')) sheet.getRange(row, col('Date Sent')).setValue(new Date());
+  if (col('Reviewed By')) sheet.getRange(row, col('Reviewed By')).setValue(Session.getActiveUser().getEmail());
+
+  ui.alert('Sent', pkg.displayName + ' sent to ' + email + '.', ui.ButtonSet.OK);
 }
 
 function doPost(e) {
