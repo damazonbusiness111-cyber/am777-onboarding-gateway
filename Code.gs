@@ -11,8 +11,8 @@
  * 7. Copy the deployment URL into APPS_SCRIPT_URL in script.js.
  */
 
-var SHEET_ID = 'REPLACE_WITH_YOUR_SHEET_ID';
-var SIGNATURE_FOLDER_ID = 'REPLACE_WITH_YOUR_DRIVE_FOLDER_ID';
+var SHEET_ID = '1FHAUFSkXUXw9w71dGbpZpnDNTVjU47T4nP8pSxWmIVw';
+var SIGNATURE_FOLDER_ID = '1PZmYQdwWxacMuhTfkGC8xhCSVp_TyvdO';
 var ADMIN_EMAIL = 'damazonbusiness111@gmail.com';
 
 // routeType -> { tab, idPrefix }
