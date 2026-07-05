@@ -129,6 +129,7 @@ function enhanceCrmUX() {
     var lastCol = sheet.getLastColumn();
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     var statusColIdx = headers.indexOf('CRM Status') + 1;
+    var pdfSentColIdx = headers.indexOf('PDF Package Sent') + 1;
     if (!statusColIdx) return; // run addReviewColumns() first if this tab predates it
 
     sheet.setFrozenRows(1);
@@ -152,6 +153,26 @@ function enhanceCrmUX() {
         .setRanges([statusRange])
         .build();
     });
+
+    // "Needs action" flag: highlights the PDF Package Sent cell bright orange
+    // whenever status has reached a send-worthy stage but nothing's gone out
+    // yet — so a stalled row is visible just by scanning down that column,
+    // without opening every row to check.
+    if (pdfSentColIdx) {
+      var pdfSentRange = sheet.getRange(2, pdfSentColIdx, maxRows - 1, 1);
+      var statusColLetter = columnToLetter(statusColIdx);
+      var needsActionRule = SpreadsheetApp.newConditionalFormatRule()
+        .whenFormulaSatisfied(
+          '=AND(OR($' + statusColLetter + '2="Qualified",$' + statusColLetter + '2="Approved Pending Funding",$' + statusColLetter + '2="Active"),$' + columnToLetter(pdfSentColIdx) + '2="")'
+        )
+        .setBackground('#FF9800')
+        .setFontColor('#FFFFFF')
+        .setBold(true)
+        .setRanges([pdfSentRange])
+        .build();
+      rules.push(needsActionRule);
+    }
+
     sheet.setConditionalFormatRules(rules);
 
     // Reasonable column widths so long fields (JSON, signature links) don't
@@ -511,4 +532,16 @@ function buildRouteBreakdown(routeType, extra) {
 
 function jsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// 1 -> "A", 27 -> "AA", etc. — used to build conditional-format formulas
+// that reference other columns by letter (Apps Script has no built-in for this).
+function columnToLetter(column) {
+  var letter = '';
+  while (column > 0) {
+    var remainder = (column - 1) % 26;
+    letter = String.fromCharCode(65 + remainder) + letter;
+    column = Math.floor((column - 1) / 26);
+  }
+  return letter;
 }
