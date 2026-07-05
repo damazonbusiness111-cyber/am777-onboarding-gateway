@@ -51,7 +51,9 @@ var ALL_TABS = [
 
 // Appended to every submission tab's header row — the admin-only review
 // columns applicants never see (they're the backend CRM, not the form).
-var REVIEW_COLUMNS = ['CRM Status', 'PDF Package Sent', 'Date Sent', 'Reviewed By', 'Next Action'];
+// "Recommended Next Action" is a live formula (auto-updates when Status
+// changes); "Next Action" stays free-text for the admin's own notes.
+var REVIEW_COLUMNS = ['CRM Status', 'Recommended Next Action', 'PDF Package Sent', 'Date Sent', 'Reviewed By', 'Next Action'];
 
 function setupSheets() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -96,6 +98,9 @@ function onOpen() {
     .addSeparator()
     .addItem('Format Sheets (dropdowns, colors, freeze header)', 'enhanceCrmUX')
     .addItem('Rebuild "Start Here" Guide Tab', 'buildStartHereTab')
+    .addSeparator()
+    .addItem('Hide Unused Tabs (downstream ops, tidy view)', 'hideUnusedTabs')
+    .addItem('Show All Tabs Again', 'showAllTabs')
     .addToUi();
 }
 
@@ -114,6 +119,20 @@ var CRM_STATUS_COLORS = {
   'Archived': '#D6D6D6'
 };
 
+// Status -> plain-language recommended next step, plugged into a live
+// SWITCH() formula in the "Recommended Next Action" column so it auto-updates
+// the moment CRM Status changes — the admin never has to type this by hand.
+var RECOMMENDED_ACTION_MAP = {
+  'Submitted': 'Review the submission and set status to Under Review',
+  'Under Review': 'Decide: Qualified, Approved Pending Funding, Paused, or Rejected',
+  'Qualified': 'Send Onboarding Package for Selected Row',
+  'Approved Pending Funding': 'Confirm funding/terms, then Send Onboarding Package',
+  'Active': 'Move to downstream tracking tabs (Payout, Perk Fulfillment, etc.)',
+  'Paused': 'Check back later — no action needed right now',
+  'Rejected': 'No action needed — archive when convenient',
+  'Archived': 'No action needed'
+};
+
 // One-click formatting pass: dropdown validation + color-coded conditional
 // formatting on CRM Status, frozen header row, and sensible column widths —
 // makes each submission tab behave like a real CRM board instead of a raw
@@ -129,6 +148,7 @@ function enhanceCrmUX() {
     var lastCol = sheet.getLastColumn();
     var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     var statusColIdx = headers.indexOf('CRM Status') + 1;
+    var recommendedColIdx = headers.indexOf('Recommended Next Action') + 1;
     var pdfSentColIdx = headers.indexOf('PDF Package Sent') + 1;
     if (!statusColIdx) return; // run addReviewColumns() first if this tab predates it
 
@@ -136,6 +156,21 @@ function enhanceCrmUX() {
 
     var maxRows = Math.max(sheet.getMaxRows(), 200);
     var statusRange = sheet.getRange(2, statusColIdx, maxRows - 1, 1);
+
+    // Live "Recommended Next Action" formula — reads the status cell on its
+    // own row and looks up the plain-language next step. Re-applying this is
+    // safe any time; it only overwrites the formula, never the Status value
+    // or any other data, so existing lead rows are untouched.
+    if (recommendedColIdx) {
+      var statusColLetter = columnToLetter(statusColIdx);
+      var switchArgs = Object.keys(RECOMMENDED_ACTION_MAP).map(function (status) {
+        return '"' + status + '", "' + RECOMMENDED_ACTION_MAP[status] + '"';
+      }).join(', ');
+      var recommendedRange = sheet.getRange(2, recommendedColIdx, maxRows - 1, 1);
+      recommendedRange.setFormulaR1C1(
+        '=IF(RC' + statusColIdx + '="", "", SWITCH(RC' + statusColIdx + ', ' + switchArgs + ', "Review and set a status"))'
+      );
+    }
 
     // Dropdown validation
     var rule = SpreadsheetApp.newDataValidation()
@@ -188,6 +223,44 @@ function enhanceCrmUX() {
   });
 
   Logger.log('CRM formatting applied to all submission tabs.');
+}
+
+// Tabs that stay visible day-to-day — the guide, the cross-route overview,
+// and the 5 tabs the form actually writes to. Everything else in ALL_TABS is
+// downstream ops tracking that's empty until a deal goes Active, so it's
+// hidden (never deleted) to keep the workbook from looking cluttered.
+var VISIBLE_TABS = ['Start Here', MASTER_LOG_TAB].concat(
+  Object.values(ROUTE_MAP).map(function (r) { return r.tab; })
+);
+
+// Hides every tab not in VISIBLE_TABS. Uses sheet.hideSheet() only — this
+// never deletes a tab or touches a single row of data, and is fully reversible
+// via showAllTabs().
+function hideUnusedTabs() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hidden = [];
+  ALL_TABS.forEach(function (tabName) {
+    if (VISIBLE_TABS.indexOf(tabName) !== -1) return;
+    var sheet = ss.getSheetByName(tabName);
+    if (sheet && !sheet.isSheetHidden()) {
+      sheet.hideSheet();
+      hidden.push(tabName);
+    }
+  });
+  Logger.log('Hidden tabs: ' + hidden.join(', '));
+}
+
+// Reversal for hideUnusedTabs() — unhides every tab in ALL_TABS. No data is
+// ever touched by either function, only the sheet's visibility flag.
+function showAllTabs() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  ALL_TABS.forEach(function (tabName) {
+    var sheet = ss.getSheetByName(tabName);
+    if (sheet && sheet.isSheetHidden()) sheet.showSheet();
+  });
+  var startHere = ss.getSheetByName('Start Here');
+  if (startHere && startHere.isSheetHidden()) startHere.showSheet();
+  Logger.log('All tabs visible again.');
 }
 
 // Creates (or replaces) a "Start Here" tab as the first tab in the workbook —
