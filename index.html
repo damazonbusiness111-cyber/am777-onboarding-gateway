@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AM777 Onboarding Gateway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="brand">AM777 <span>Onboarding Gateway</span></div>
+      <div class="brand-sub">Private Role-Based Access, Agreement, Support, and Review System</div>
+    </div>
+    <div class="progress-pill no-print"><span id="stepNum">1</span> / <span id="stepTotal">7</span></div>
+  </div>
+  <div class="progress-track no-print"><div class="progress-fill" id="progressFill"></div></div>
+
+  <form id="agreementForm" novalidate>
+
+    <!-- WELCOME -->
+    <section class="step active" data-step="welcome">
+      <div class="card">
+        <span class="status-chip">Private Access &middot; By Application Only</span>
+        <div class="eyebrow">Welcome</div>
+        <h2 class="step-title">Welcome to the AM777 Onboarding Gateway.</h2>
+        <p class="step-body">Thank you for entering this private onboarding gateway. Whether you are here as a future collaborator, operator, supporter, funder, or formal inquiry, your interest means you are looking at something still being built — but built with direction, discipline, and long-term purpose.</p>
+        <p class="step-body">AM777 Automation Solutions is focused on creating practical AI-assisted systems for daily business essentials: lead tracking, follow-up, CRM workflows, onboarding, automation tools, and organized digital operations.</p>
+        <p class="step-body">For some, this may be a support opportunity. For others, it may become a role, a learning path, or a career direction they did not expect.</p>
+        <p class="step-body">This gateway exists to make every role, contribution, agreement, and expectation clear before moving forward. Every submission is read and reviewed personally — nothing here is automatic.</p>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" onclick="goToStep('route')">Enter Gateway</button>
+        </div>
+        <div class="partner-strip">
+          <div class="partner-badge-item">
+            <span class="badge-mark badge-am777" aria-hidden="true">A7</span>
+            <span>AM777 Automation Solutions</span>
+          </div>
+          <span class="partner-x">&times;</span>
+          <div class="partner-badge-item">
+            <span class="badge-mark badge-infra777" aria-hidden="true">IM</span>
+            <span>InfraMind777</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUTE SELECTOR -->
+    <section class="step" data-step="route">
+      <div class="card">
+        <div class="eyebrow">Choose Your Onboarding Route</div>
+        <h2 class="step-title">Which best describes you?</h2>
+        <p class="step-body">Select the route that fits why you're here. Each route has its own terms and expectations.</p>
+
+        <div class="route-grid">
+          <button type="button" class="route-card" data-route="va" onclick="selectRoute('va')">
+            <span class="chip">Collaborator</span>
+            <h3>VA Outreach Collaborator</h3>
+            <p>Prospect research, outreach, follow-ups, CRM updates, and qualified lead movement.</p>
+          </button>
+          <button type="button" class="route-card" data-route="admin" onclick="selectRoute('admin')">
+            <span class="chip">Operator</span>
+            <h3>Admin / Closing Partner</h3>
+            <p>Lead review, CRM control, follow-up direction, client movement, closing support.</p>
+          </button>
+          <button type="button" class="route-card" data-route="perks" onclick="selectRoute('perks')">
+            <span class="chip">Supporter</span>
+            <h3>Perks-Based Supporter</h3>
+            <p>Support tools, software, AI stack, GPU, or hardware in exchange for non-cash perks.</p>
+          </button>
+          <button type="button" class="route-card" data-route="funder" onclick="selectRoute('funder')">
+            <span class="chip">Funder</span>
+            <h3>Revenue-Share Funder</h3>
+            <p>Support a specific initiative through a capped, project-based revenue-share structure.</p>
+          </button>
+          <button type="button" class="route-card" data-route="capital" onclick="selectRoute('capital')">
+            <span class="chip">Inquiry Only</span>
+            <h3>Formal Capital Inquiry</h3>
+            <p>Larger funding or capital-related discussions requiring separate review.</p>
+          </button>
+        </div>
+
+        <p class="error-text" id="routeError" style="display:none; margin-top:14px;">Please select a route before continuing.</p>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" onclick="goToStep('welcome')">Back</button>
+          <button type="button" class="btn btn-primary" onclick="confirmRouteSelection()">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUTE CONTEXT + TRUST CARDS -->
+    <section class="step" data-step="context">
+      <div class="card">
+        <span class="status-chip" id="contextChip">Route</span>
+        <h2 class="step-title" id="contextTitle">Route context</h2>
+        <p class="step-body" id="contextDescription"></p>
+
+        <div class="trust-grid">
+          <div class="trust-card">
+            <h4>Review Required</h4>
+            <p>All submissions are reviewed before approval. AM777 does not automatically accept collaborators, supporters, funders, or formal inquiries through this gateway.</p>
+          </div>
+          <div class="trust-card">
+            <h4>Traceable Record</h4>
+            <p>Each successful submission receives a unique record ID for traceability and internal review.</p>
+          </div>
+          <div class="trust-card">
+            <h4>Role-Based Terms</h4>
+            <p>Each route has its own expectations, support rules, confidentiality terms, and approval requirements.</p>
+          </div>
+          <div class="trust-card">
+            <h4>Confidentiality First</h4>
+            <p>AM777 protects internal systems, client details, pricing, workflows, support terms, and private operating documents.</p>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" onclick="goToStep('route')">Back</button>
+          <button type="button" class="btn btn-primary" onclick="goToStep('common')">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMON FIELDS -->
+    <section class="step" data-step="common">
+      <div class="card">
+        <div class="eyebrow">Your Details</div>
+        <h2 class="step-title">Tell us who you are</h2>
+
+        <div class="field" id="f_fullName">
+          <label for="fullName">Full Name<span class="req">*</span></label>
+          <input type="text" id="fullName" placeholder="Juan Dela Cruz" required>
+          <div class="error-text">Full name is required.</div>
+        </div>
+        <div class="field" id="f_email">
+          <label for="email">Email Address<span class="req">*</span></label>
+          <input type="email" id="email" placeholder="you@example.com" required>
+          <div class="error-text">Enter a valid email address.</div>
+        </div>
+        <div class="field" id="f_mobile">
+          <label for="mobile">Mobile / WhatsApp<span class="req">*</span></label>
+          <input type="tel" id="mobile" placeholder="+63 9XX XXX XXXX" required>
+          <div class="error-text">Mobile/WhatsApp number is required.</div>
+        </div>
+        <div class="field" id="f_location">
+          <label for="location">Location<span class="req">*</span></label>
+          <input type="text" id="location" placeholder="City, Country" required>
+          <div class="error-text">Location is required.</div>
+        </div>
+        <div class="field" id="f_fbLink">
+          <label for="fbLink">Facebook / Profile Link<span class="req">*</span></label>
+          <input type="text" id="fbLink" placeholder="https://facebook.com/yourprofile" required>
+          <div class="error-text">Profile link is required.</div>
+        </div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" onclick="goToStep('context')">Back</button>
+          <button type="button" class="btn btn-primary" onclick="validateCommonFields()">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUTE-SPECIFIC EXTRA FIELDS (rendered dynamically) -->
+    <section class="step" data-step="extra">
+      <div class="card">
+        <div class="eyebrow">Route Details</div>
+        <h2 class="step-title">A few more details</h2>
+        <div id="extraFieldsContainer"></div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" onclick="goToStep('common')">Back</button>
+          <button type="button" class="btn btn-primary" onclick="validateExtraFields()">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIGNATURE -->
+    <section class="step" data-step="sign">
+      <div class="card">
+        <div class="eyebrow">Agreement & Signature</div>
+        <h2 class="step-title">Confirm and sign</h2>
+
+        <div class="confirm-phrase-box" id="confirmStatementText"></div>
+
+        <div class="field" id="f_typedSig">
+          <label for="typedSig">Typed Signature<span class="req">*</span></label>
+          <input type="text" id="typedSig" placeholder="Type your full name as signature" required>
+          <div class="error-text">Typed signature is required.</div>
+        </div>
+
+        <div class="field" id="f_drawnSig">
+          <label>Drawn Signature<span class="req">*</span></label>
+          <div class="sig-canvas-wrap">
+            <canvas id="sigCanvas"></canvas>
+            <button type="button" class="sig-clear-btn" onclick="clearSignature()">Clear</button>
+          </div>
+          <div class="error-text">Please draw your signature.</div>
+        </div>
+
+        <div class="field" id="f_confirmPhrase">
+          <label for="confirmPhrase">Type "CONFIRMED" to confirm<span class="req">*</span></label>
+          <input type="text" id="confirmPhrase" placeholder="CONFIRMED" required>
+          <div class="error-text">Please type CONFIRMED exactly to confirm.</div>
+        </div>
+
+        <div class="submit-error" id="submitError">Something went wrong sending your submission. Please check your connection and try again.</div>
+
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" onclick="goToStep('extra')">Back</button>
+          <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitAgreement()">
+            <span class="spinner"></span>
+            <span class="btn-label">Submit</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONFIRMATION -->
+    <section class="step" data-step="confirm">
+      <div class="card">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div class="eyebrow">Submission Received</div>
+        <h2 class="step-title">Thank you, <span id="confirmName">there</span></h2>
+        <p class="step-body">Your submission has been received and recorded for review. Keep the details below for your files.</p>
+
+        <div class="confirm-detail"><span class="k">Record ID</span><span class="v" id="confirmId">—</span></div>
+        <div class="confirm-detail"><span class="k">Submitted</span><span class="v" id="confirmTimestamp">—</span></div>
+        <div class="confirm-detail"><span class="k">Route</span><span class="v" id="confirmRoute">—</span></div>
+
+        <div class="btn-row no-print">
+          <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save My Copy</button>
+        </div>
+      </div>
+    </section>
+
+  </form>
+
+  <footer class="page-footer no-print">
+    AM777 Automation Solutions &middot; Agreement v1.0
+    <div class="partner-badge"><span class="badge-mark badge-infra777" aria-hidden="true" style="width:16px;height:16px;font-size:7px;">IM</span> Part of the <strong>InfraMind777</strong> ecosystem</div>
+  </footer>
+</div>
+
+<!-- FAQ Concierge -->
+<button class="concierge-launcher no-print" id="conciergeLauncher" aria-label="Open gateway FAQ helper">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  <span class="ring"></span>
+</button>
+
+<aside class="concierge no-print" id="concierge" aria-hidden="true">
+  <div class="concierge-head">
+    <div class="concierge-id">
+      <div class="concierge-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0b0e14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <div>
+        <div class="concierge-title">Gateway FAQ Helper</div>
+        <div class="concierge-status">Online — reference only</div>
+      </div>
+    </div>
+    <button class="concierge-close" id="conciergeClose" aria-label="Close">&times;</button>
+  </div>
+  <div class="concierge-body">
+    <div class="chat-thread" id="chatThread"></div>
+    <div class="faq-options" id="faqOptions"></div>
+  </div>
+</aside>
+
+<script src="script.js"></script>
+</body>
+</html>
