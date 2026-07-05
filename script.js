@@ -1,6 +1,6 @@
 (function () {
   // TODO: Replace with your deployed Google Apps Script Web App URL (see Code.gs + README.md)
-  var APPS_SCRIPT_URL = 'REPLACE_WITH_YOUR_APPS_SCRIPT_WEB_APP_URL';
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEibchBL3XA-IkD-hVZKT--r-Fn3je5Mqbqqzx15WVxa-v2VTuMSMpE2XcyTQ-ZI1D/exec';
   var AGREEMENT_VERSION = 'V1.0';
 
   // ---------------------------------------------------------------------
