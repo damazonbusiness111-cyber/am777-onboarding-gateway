@@ -1,6 +1,5 @@
 (function () {
-  // TODO: Replace with your deployed Google Apps Script Web App URL (see Code.gs + README.md)
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEibchBL3XA-IkD-hVZKT--r-Fn3je5Mqbqqzx15WVxa-v2VTuMSMpE2XcyTQ-ZI1D/exec';
+  var APPS_SCRIPT_URL = 'https://am777.app.n8n.cloud/webhook/am777-onboarding';
   var AGREEMENT_VERSION = 'V1.0';
 
   // ---------------------------------------------------------------------
@@ -373,7 +372,7 @@
 
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
       .then(function (res) { return res.json().catch(function () { return {}; }); })
