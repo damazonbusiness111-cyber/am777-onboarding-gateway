@@ -98,7 +98,16 @@
   var STEP_CONFIRM = 'confirm';
   var STEP_ORDER = [STEP_WELCOME, STEP_ROUTE, STEP_CONTEXT, STEP_COMMON, STEP_EXTRA, STEP_SIGN, STEP_CONFIRM];
 
-  var state = { routeKey: null };
+  var state = { routeKey: null, recordId: null, submitting: false };
+
+  // Route key -> short category label sent to the backend (requirement: category field).
+  var ROUTE_CATEGORY = {
+    va: 'VA',
+    admin: 'Admin',
+    perks: 'Perks',
+    funder: 'Funder',
+    capital: 'Capital'
+  };
 
   function $(id) { return document.getElementById(id); }
 
@@ -131,6 +140,11 @@
   // Route selection
   // ---------------------------------------------------------------------
   window.selectRoute = function (routeKey) {
+    if (state.routeKey !== routeKey) {
+      // Starting a fresh route selection counts as a new submission —
+      // any previously generated Record ID from an earlier attempt is dropped.
+      state.recordId = null;
+    }
     state.routeKey = routeKey;
     document.querySelectorAll('.route-card').forEach(function (el) {
       el.classList.toggle('selected', el.dataset.route === routeKey);
@@ -324,27 +338,52 @@
   }
 
   window.submitAgreement = function () {
+    // Anti-double-submit: ignore clicks while a request is already in flight.
+    if (state.submitting) return;
+
     var route = ROUTES[state.routeKey];
     var valid = true;
 
+    var fullName = $('fullName').value.trim();
+    var email = $('email').value.trim();
+    var mobile = $('mobile').value.trim();
     var typedSig = $('typedSig').value.trim();
-    setFieldError('f_typedSig', !typedSig); if (!typedSig) valid = false;
 
+    setFieldError('f_typedSig', !typedSig); if (!typedSig) valid = false;
     setFieldError('f_drawnSig', !hasDrawn); if (!hasDrawn) valid = false;
 
     var confirmPhrase = $('confirmPhrase').value.trim();
     var phraseInvalid = confirmPhrase.toUpperCase() !== 'CONFIRMED';
     setFieldError('f_confirmPhrase', phraseInvalid); if (phraseInvalid) valid = false;
 
+    // Required-field guard (name/email/mobile were already validated on the
+    // common-fields step, but re-check here so a stale/edited value can never
+    // reach the backend without a client-side check right before sending).
+    if (!fullName || !email || !mobile) valid = false;
+
     if (!valid) return;
 
     var submitBtn = $('submitBtn');
     var submitError = $('submitError');
+    var submitBtnLabel = submitBtn.querySelector('.btn-label');
+
+    function showError(message) {
+      submitError.textContent = message;
+      submitError.style.display = 'block';
+    }
+
     submitError.style.display = 'none';
     submitBtn.disabled = true;
     submitBtn.classList.add('loading');
+    if (submitBtnLabel) submitBtnLabel.textContent = 'Submitting…';
+    state.submitting = true;
 
-    var recordId = generateFallbackId(route.idPrefix);
+    // Preserve the Record ID across retries within the same submission —
+    // only generate a fresh one the first time this route/session submits.
+    if (!state.recordId) {
+      state.recordId = generateFallbackId(route.idPrefix);
+    }
+    var recordId = state.recordId;
     var timestamp = new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
 
     var extraData = {};
@@ -352,44 +391,88 @@
       extraData[f.id] = $('extra_' + f.id).value.trim();
     });
 
+    var fbLink = $('fbLink').value.trim();
+    var drawnSignatureData = canvas.toDataURL('image/png');
+
     var payload = {
-      routeType: state.routeKey,
+      routeType: route.label,
+      routeKey: state.routeKey,
       sheetTab: route.sheetTab,
+      category: ROUTE_CATEGORY[state.routeKey] || state.routeKey,
       agreementVersion: AGREEMENT_VERSION,
       recordId: recordId,
       timestamp: timestamp,
-      fullName: $('fullName').value.trim(),
-      email: $('email').value.trim(),
-      mobile: $('mobile').value.trim(),
+      submittedAt: timestamp,
+      fullName: fullName,
+      email: email,
+      mobile: mobile,
       location: $('location').value.trim(),
-      fbLink: $('fbLink').value.trim(),
+      fbLink: fbLink,
+      facebookProfile: fbLink,
       extra: extraData,
+      extraFields: extraData,
       typedSignature: typedSig,
-      drawnSignature: canvas.toDataURL('image/png'),
+      drawnSignature: drawnSignatureData,
+      signatureImageLink: drawnSignatureData,
       confirmPhrase: confirmPhrase,
       confirmStatement: route.confirmStatement
     };
 
+    console.log('AM777 payload sent:', payload);
+
+    var timedOut = false;
+    var controller = ('AbortController' in window) ? new AbortController() : null;
+    var timeoutId = setTimeout(function () {
+      timedOut = true;
+      if (controller) controller.abort();
+    }, 20000);
+
     fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller ? controller.signal : undefined
     })
-      .then(function (res) { return res.json().catch(function () { return {}; }); })
-      .then(function (data) {
-        var finalId = (data && data.recordId) ? data.recordId : recordId;
-        $('confirmName').textContent = payload.fullName || 'there';
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function (result) {
+        clearTimeout(timeoutId);
+        console.log('AM777 backend response:', result.data);
+
+        if (!result.ok || !result.data || result.data.success !== true) {
+          showError('Submission not completed. Please try again or contact AM777 directly.');
+          return;
+        }
+
+        var finalId = result.data.recordId || recordId;
+        $('confirmName').textContent = fullName || 'there';
         $('confirmId').textContent = finalId;
         $('confirmTimestamp').textContent = timestamp;
         $('confirmRoute').textContent = route.label;
+        var statusEl = $('confirmStatus');
+        if (statusEl) statusEl.textContent = 'Confirmed by server';
+        // This submission is done — a future retry (if the user starts over)
+        // should get a brand-new Record ID, not reuse this completed one.
+        state.recordId = null;
         goToStep(STEP_CONFIRM);
       })
-      .catch(function () {
-        submitError.style.display = 'block';
+      .catch(function (err) {
+        clearTimeout(timeoutId);
+        if (timedOut || (err && err.name === 'AbortError')) {
+          showError('Submission is taking too long. Please try again.');
+        } else {
+          console.log('AM777 backend response: network error', err);
+          showError('Submission not completed. Please try again or contact AM777 directly.');
+        }
       })
       .finally(function () {
         submitBtn.disabled = false;
         submitBtn.classList.remove('loading');
+        if (submitBtnLabel) submitBtnLabel.textContent = 'Submit';
+        state.submitting = false;
       });
   };
 })();
