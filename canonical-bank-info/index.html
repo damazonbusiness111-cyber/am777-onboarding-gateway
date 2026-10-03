@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AM777 Canonical Bank Info — privacy-safe account and SIM verification form.">
+  <title>Canonical Bank Info | AM777</title>
+  <style>
+    :root { --navy:#132541; --navy-2:#1b355e; --graphite:#26313d; --muted:#667085; --line:#d9e0e8; --paper:#fff; --wash:#f4f7fb; --danger:#a42525; --success:#126c4a; --focus:#3b82f6; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; background:var(--wash); color:var(--graphite); font:16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .shell { width:min(100% - 32px, 980px); margin:0 auto; padding:32px 0 56px; }
+    .brand { display:flex; align-items:center; gap:12px; color:var(--navy); font-weight:800; letter-spacing:.08em; font-size:.78rem; text-transform:uppercase; }
+    .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:9px; background:var(--navy); color:#fff; letter-spacing:0; }
+    header { padding:20px 0 24px; }
+    h1 { margin:14px 0 6px; color:var(--navy); font-size:clamp(1.8rem, 4vw, 2.7rem); line-height:1.1; letter-spacing:-.04em; }
+    .lead { max-width:650px; margin:0; color:var(--muted); }
+    .source { display:inline-flex; gap:8px; align-items:center; margin-top:16px; padding:7px 10px; border:1px solid #c9d7ea; border-radius:999px; background:#eef5ff; color:var(--navy-2); font-size:.82rem; font-weight:700; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#1c7c54; }
+    .notice { display:grid; grid-template-columns:auto 1fr; gap:13px; margin-bottom:20px; padding:17px; border:1px solid #ead7a8; border-radius:14px; background:#fff9e8; color:#594a1b; }
+    .notice strong { display:block; margin-bottom:2px; }
+    .notice-icon { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:#e3bb51; color:#382b0d; font-weight:900; }
+    .card { overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--paper); box-shadow:0 14px 40px rgba(27,53,94,.08); }
+    .card-heading { padding:22px 24px 18px; border-bottom:1px solid var(--line); }
+    .card-heading h2 { margin:0; color:var(--navy); font-size:1.18rem; }
+    .card-heading p { margin:4px 0 0; color:var(--muted); font-size:.92rem; }
+    form { padding:24px; }
+    .section { margin:0 0 28px; padding:0; border:0; }
+    .section:last-of-type { margin-bottom:20px; }
+    legend { width:100%; margin-bottom:14px; padding:0 0 8px; border-bottom:1px solid #e9edf2; color:var(--navy); font-size:.92rem; font-weight:800; letter-spacing:.02em; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .full { grid-column:1/-1; }
+    label { display:block; margin-bottom:6px; color:#3c4856; font-size:.88rem; font-weight:700; }
+    .required { color:var(--danger); }
+    input, select, textarea { width:100%; border:1px solid #bcc8d6; border-radius:9px; background:#fff; color:var(--graphite); font:inherit; padding:10px 11px; transition:border .15s, box-shadow .15s; }
+    textarea { min-height:96px; resize:vertical; }
+    input:focus, select:focus, textarea:focus, button:focus { outline:3px solid color-mix(in srgb, var(--focus) 26%, transparent); outline-offset:2px; border-color:var(--focus); }
+    .help, .error { display:block; margin:5px 0 0; font-size:.78rem; }
+    .help { color:var(--muted); }
+    .error { min-height:1.1em; color:var(--danger); }
+    .toggle-row { display:flex; align-items:flex-start; gap:9px; margin-top:4px; padding:11px; border:1px solid #e7cfcf; border-radius:10px; background:#fff7f7; color:#682525; font-size:.86rem; }
+    .toggle-row input { flex:0 0 auto; width:18px; height:18px; margin:2px 0 0; accent-color:var(--navy); }
+    .is-hidden { display:none; }
+    .status { min-height:24px; margin:0 0 14px; padding:0 2px; color:var(--muted); font-size:.9rem; font-weight:650; }
+    .status[data-state="error"] { color:var(--danger); }
+    .status[data-state="success"] { color:var(--success); }
+    .bank-list { margin:0 0 20px; border:1px solid #c9d7ea; border-radius:12px; background:#f7faff; padding:12px; }
+    .bank-list[hidden] { display:none; }
+    .bank-list h3 { margin:0 0 8px; color:var(--navy); font-size:.92rem; }
+    .bank-list p { margin:0; color:var(--muted); font-size:.84rem; }
+    .bank-entry { display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:8px; padding:10px; border-radius:8px; background:#fff; }
+    .bank-entry span { color:var(--muted); font-size:.82rem; }
+    .bank-entry button { min-height:32px; padding:5px 9px; font-size:.78rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding-top:18px; border-top:1px solid var(--line); }
+    button { min-height:43px; border:1px solid var(--navy); border-radius:9px; background:var(--navy); color:#fff; cursor:pointer; font:inherit; font-size:.92rem; font-weight:800; padding:10px 15px; }
+    button:hover { background:var(--navy-2); }
+    button:disabled { cursor:not-allowed; opacity:.6; }
+    button.secondary { border-color:#aebbc9; background:#fff; color:var(--navy); }
+    button.secondary:hover { background:#f2f6fb; }
+    button.danger { margin-left:auto; border-color:#d9aaaa; background:#fff; color:var(--danger); }
+    .footer { margin:18px 4px 0; color:var(--muted); font-size:.78rem; text-align:center; }
+    @media (max-width:640px) { .shell { width:min(100% - 22px, 980px); padding-top:20px; } .grid { grid-template-columns:1fr; gap:14px; } .full { grid-column:auto; } .card-heading, form { padding:19px 16px; } .actions button { width:100%; } button.danger { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="brand-mark">A</span> AM777</div>
+      <h1>Canonical Bank Info</h1>
+      <p class="lead">A form shared by invitation for verified payment-account and SIM availability details.</p>
+      <div class="source"><span class="dot"></span> Canonical source of truth</div>
+    </header>
+
+    <aside class="notice" aria-label="Privacy notice">
+      <span class="notice-icon" aria-hidden="true">!</span>
+      <div><strong>Do not enter secrets.</strong> Never provide passwords, PINs, OTP codes, CVV/CVC, recovery codes, login credentials, or security answers. This form only records account and availability status. If delivery fails, a recovery copy excludes any full account number and is retained in this browser for up to 24 hours.</div>
+    </aside>
+    <noscript><aside class="notice"><span class="notice-icon" aria-hidden="true">!</span><div><strong>This form requires JavaScript.</strong> Do not enter information until JavaScript is enabled; the form cannot safely validate or submit data without it.</div></aside></noscript>
+
+    <section class="card" aria-labelledby="form-title">
+      <div class="card-heading">
+        <h2 id="form-title">Verification record</h2>
+        <p>Fields marked <span class="required">*</span> are needed for a usable record.</p>
+      </div>
+      <form id="bank-form" method="post" novalidate>
+        <fieldset class="section">
+          <legend>Account details</legend>
+          <div class="grid">
+            <div><label for="bankName">Bank or e-wallet name <span class="required">*</span></label><input id="bankName" name="bankName" autocomplete="organization" required><small class="error" data-error-for="bankName"></small></div>
+            <div><label for="accountHolder">Account holder name <span class="required">*</span></label><input id="accountHolder" name="accountHolder" autocomplete="name" required><small class="error" data-error-for="accountHolder"></small></div>
+            <div><label for="accountType">Account type</label><select id="accountType" name="accountType"><option value="">Select status</option><option>Savings</option><option>Checking</option><option>E-wallet</option><option>Business</option><option>Other</option></select></div>
+            <div id="last-four-row"><label for="accountLastFour">Account number — last 4 digits (optional)</label><input id="accountLastFour" name="accountLastFour" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="1234"><small class="help">Preferred: only the final four digits. Leave blank if unavailable.</small><small class="error" data-error-for="accountLastFour"></small></div>
+            <div class="full is-hidden" id="full-account-row"><label for="fullAccountNumber">Full account number (optional)</label><input id="fullAccountNumber" name="fullAccountNumber" inputmode="numeric" autocomplete="off" placeholder="Enter only when AM777 explicitly requires it"><small class="help">This is more sensitive. Check the box again to remove it.</small><small class="error" data-error-for="fullAccountNumber"></small></div>
+            <div class="full toggle-row"><input id="full-number-consent" name="fullNumberConsent" type="checkbox"><label for="full-number-consent">I understand that last four digits are preferred. I will enter a full account number only if AM777 explicitly asked for it.</label></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="section">
+          <legend>Card details (optional)</legend>
+          <div class="grid">
+            <div><label for="cardType">Card type</label><select id="cardType" name="cardType"><option value="">No card / not provided</option><option>Debit</option><option>Credit</option><option>Prepaid</option><option>Virtual</option></select></div>
+            <div><label for="cardNetwork">Card network</label><select id="cardNetwork" name="cardNetwork"><option value="">Select network</option><option>Visa</option><option>Mastercard</option><option>JCB</option><option>UnionPay</option><option>Other</option></select></div>
+            <div><label for="cardLastFour">Card number — last 4 digits only</label><input id="cardLastFour" name="cardLastFour" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="1234"><small class="help">Never enter the full card number, CVV/CVC, PIN, or OTP.</small><small class="error" data-error-for="cardLastFour"></small></div>
+            <div><label for="cardholderName">Cardholder name</label><input id="cardholderName" name="cardholderName" autocomplete="cc-name"><small class="error" data-error-for="cardholderName"></small></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="section">
+          <legend>Linked SIM and device</legend>
+          <div class="grid">
+            <div><label for="linkedMobile">Linked mobile number</label><input id="linkedMobile" name="linkedMobile" inputmode="tel" autocomplete="tel" placeholder="e.g. 09XX XXX XXXX"><small class="error" data-error-for="linkedMobile"></small></div>
+            <div><label for="simProvider">SIM / network provider</label><input id="simProvider" name="simProvider" aria-describedby="simProvider-error" placeholder="e.g. Globe, Smart, DITO"><small class="error" id="simProvider-error" data-error-for="simProvider"></small></div>
+            <div><label for="simAvailability">SIM availability</label><select id="simAvailability" name="simAvailability"><option value="">Select status</option><option>Available</option><option>Unavailable</option><option>Temporarily unavailable</option><option>Unknown</option></select></div>
+            <div><label for="otpCapability">Can receive SMS / OTP? <span class="required">*</span></label><select id="otpCapability" name="otpCapability" required><option value="">Select status</option><option value="yes">Yes</option><option value="no">No</option><option value="unknown">Unknown</option></select><small class="help">Status only — never enter any OTP code.</small><small class="error" data-error-for="otpCapability"></small></div>
+            <div><label for="deviceAvailability">Device availability</label><select id="deviceAvailability" name="deviceAvailability"><option value="">Select status</option><option>Available</option><option>Unavailable</option><option>Shared</option><option>Unknown</option></select></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="section">
+          <legend>Verification status</legend>
+          <div class="grid">
+            <div><label for="kycStatus">KYC / verification status</label><select id="kycStatus" name="kycStatus"><option value="">Select status</option><option>Verified</option><option>Pending</option><option>Not verified</option><option>Unknown</option></select></div>
+            <div><label for="accountStatus">Account status</label><select id="accountStatus" name="accountStatus"><option value="">Select status</option><option>Active</option><option>Inactive</option><option>Restricted</option><option>Unknown</option></select></div>
+            <div><label for="lastVerifiedDate">Last verified date <span class="required">*</span></label><input id="lastVerifiedDate" name="lastVerifiedDate" type="date" required><small class="error" data-error-for="lastVerifiedDate"></small></div>
+            <div><label for="adminReference">Admin reference label</label><input id="adminReference" name="adminReference" aria-describedby="adminReference-error" placeholder="Optional internal label"><small class="error" id="adminReference-error" data-error-for="adminReference"></small></div>
+            <div class="full"><label for="notes">Notes</label><textarea id="notes" name="notes" maxlength="800" placeholder="Availability or verification context only. Do not include secrets."></textarea><small class="help">Do not enter secret codes, passwords, recovery information, or login details.</small><small class="error" data-error-for="notes"></small></div>
+          </div>
+        </fieldset>
+
+        <section class="bank-list" id="bank-list" hidden aria-live="polite"><h3 id="bank-list-title">Banks ready to send</h3><div id="bank-list-items"></div></section>
+        <p class="status" id="status" role="status" aria-live="polite">Your record is sent only after the secure AM777 receiver confirms it.</p>
+        <div class="actions">
+          <button class="secondary" type="button" id="add-bank">+ Add Bank / E-wallet</button>
+          <button type="submit" id="submit-button">Submit verified record</button>
+          <button class="secondary" type="button" id="download-json">Download unsent JSON</button>
+          <button class="secondary" type="button" id="download-csv">Download unsent CSV</button>
+          <button class="danger" type="button" id="clear-local">Clear unsent records</button>
+        </div>
+      </form>
+    </section>
+    <p class="footer">AM777 · Canonical Bank Info · Shared by invitation</p>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+      const APPS_SCRIPT_URL = ''; // Paste the deployed Google Apps Script Web App URL before publishing.
+      const STORAGE_KEY = 'am777-canonical-bank-info-unsent-v1';
+      const SECRET_PATTERN = /\b(?:password|passcode|pin|otp(?:\s*code)?|cvv|cvc|recovery\s*code|security\s*answer|login\s*(?:credential|password))\b/i;
+      const api = {
+        containsLikelySecret(value) { return SECRET_PATTERN.test(String(value || '')); },
+        validateForm(data) {
+          const errors = {};
+          const required = [['bankName', 'Bank or e-wallet name is required.'], ['accountHolder', 'Account holder name is required.'], ['otpCapability', 'Select the SMS / OTP status.'], ['lastVerifiedDate', 'Last verified date is required.']];
+          required.forEach(([key, message]) => { if (!String(data[key] || '').trim()) errors[key] = message; });
+          const fullMode = data.fullNumberConsent === 'on' || data.fullNumberConsent === true;
+          const accountValue = String(fullMode ? data.fullAccountNumber : data.accountLastFour || '').trim();
+          if (fullMode && accountValue) {
+            const accountDigits = accountValue.replace(/\D/g, '');
+            if (!/^\d[\d -]*\d$/.test(accountValue) || accountDigits.length < 8 || accountDigits.length > 30) errors.fullAccountNumber = 'Enter 8–30 digits using digits, spaces, or hyphens.';
+          } else if (!fullMode && accountValue && !/^\d{4}$/.test(accountValue)) errors.accountLastFour = 'Enter exactly four digits or leave this blank.';
+          const cardLastFour = String(data.cardLastFour || '').trim();
+          if (cardLastFour && !/^\d{4}$/.test(cardLastFour)) errors.cardLastFour = 'Enter exactly four digits or leave this blank.';
+          const phone = String(data.linkedMobile || '').trim();
+          const phoneDigits = phone.replace(/\D/g, '');
+          if (phone && (!/^[+\d][\d ()-]*$/.test(phone) || phoneDigits.length < 7 || phoneDigits.length > 16)) errors.linkedMobile = 'Enter a valid mobile number or leave it blank.';
+          const verifiedDate = String(data.lastVerifiedDate || '').trim();
+          const parsedDate = new Date(verifiedDate + 'T00:00:00');
+          if (verifiedDate && (!/^\d{4}-\d{2}-\d{2}$/.test(verifiedDate) || Number.isNaN(parsedDate.getTime()))) errors.lastVerifiedDate = 'Enter a valid last verified date.';
+          else if (verifiedDate && parsedDate.getTime() > new Date().setHours(23, 59, 59, 999)) errors.lastVerifiedDate = 'Last verified date cannot be in the future.';
+          ['bankName', 'accountHolder', 'adminReference', 'notes', 'simProvider', 'cardholderName'].forEach((key) => { if (api.containsLikelySecret(data[key])) errors[key] = 'Remove secret information. This form must not contain passwords, PINs, codes, or login details.'; });
+          return { valid: Object.keys(errors).length === 0, errors };
+        },
+        buildPayload(data) {
+          const now = new Date().toISOString();
+          const fullMode = data.fullNumberConsent === 'on' || data.fullNumberConsent === true;
+          return {
+            schemaVersion: '1.0', submissionId: window.crypto?.randomUUID?.() || `cbi-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            submittedAt: now, source: 'canonical-bank-info-github-pages',
+            bankName: String(data.bankName || '').trim(), accountHolder: String(data.accountHolder || '').trim(), accountType: String(data.accountType || '').trim(),
+            accountNumberMode: fullMode ? 'full' : 'last4', accountLastFour: fullMode ? '' : String(data.accountLastFour || '').trim(), fullAccountNumber: fullMode ? String(data.fullAccountNumber || '').trim() : '',
+            cardType: String(data.cardType || '').trim(), cardNetwork: String(data.cardNetwork || '').trim(), cardLastFour: String(data.cardLastFour || '').trim(), cardholderName: String(data.cardholderName || '').trim(),
+            linkedMobile: String(data.linkedMobile || '').trim(), simProvider: String(data.simProvider || '').trim(), simAvailability: String(data.simAvailability || '').trim(), otpCapability: String(data.otpCapability || '').trim(),
+            deviceAvailability: String(data.deviceAvailability || '').trim(), kycStatus: String(data.kycStatus || '').trim(), accountStatus: String(data.accountStatus || '').trim(), notes: String(data.notes || '').trim(),
+            lastVerifiedDate: String(data.lastVerifiedDate || '').trim(), adminReference: String(data.adminReference || '').trim()
+          };
+        },
+        buildBatch(stagedBanks, currentData) {
+          return { schemaVersion: '1.1', submissionId: window.crypto?.randomUUID?.() || `cbi-batch-${Date.now()}`, submittedAt: new Date().toISOString(), source: 'canonical-bank-info-github-pages', banks: [...stagedBanks, api.buildPayload(currentData)] };
+        },
+        isAcceptedResponse(result) { return Boolean(result && (result.ok === true || result.success === true) && typeof result.recordId === 'string' && result.recordId.trim()); },
+        getFallbackRecords() { try { const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); const validRecords = Array.isArray(records) ? records.filter(record => !record.expiresAt || new Date(record.expiresAt).getTime() > Date.now()) : []; if (validRecords.length !== records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(validRecords)); return validRecords; } catch { return []; } },
+        sanitizeFallback(payload) { const scrub = (record) => ({ ...record, fullAccountNumber: '', accountNumberMode: record.accountNumberMode === 'full' ? 'full-not-stored-locally' : record.accountNumberMode }); return payload.banks ? { ...payload, banks: payload.banks.map(scrub) } : scrub(payload); },
+        saveFallback(payload) { const records = api.getFallbackRecords(); const safeCopy = { ...api.sanitizeFallback(payload), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }; records.push(safeCopy); localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); return records; },
+        async submitRecord(payload) {
+          if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_')) throw new Error('Submission receiver is not configured.');
+          const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: new URLSearchParams({ payload: JSON.stringify(payload) }) });
+          if (!response.ok) throw new Error(`Receiver returned ${response.status}.`);
+          const result = await response.json();
+          if (!api.isAcceptedResponse(result)) throw new Error(result?.message || 'Receiver did not provide a verified record confirmation.');
+          return result;
+        },
+        downloadJSON(records) { downloadFile(JSON.stringify(records, null, 2), 'canonical-bank-info-unsent.json', 'application/json'); },
+        downloadCSV(records) { const keys = Object.keys(records[0] || {}); const csv = [keys.join(','), ...records.map(record => keys.map(key => api.csvValue(record[key])).join(','))].join('\n'); downloadFile(csv, 'canonical-bank-info-unsent.csv', 'text/csv'); },
+        csvValue(value) { const text = String(value ?? ''); const neutralized = /^[=+\-@]/.test(text) ? `'${text}` : text; return /[",\n]/.test(neutralized) ? `"${neutralized.replace(/"/g, '""')}"` : neutralized; }
+      };
+      window.CanonicalBankInfo = api;
+
+      function downloadFile(content, filename, type) { const blob = new Blob([content], { type: `${type};charset=utf-8` }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(link.href); }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('#bank-form'); const status = document.querySelector('#status'); const submitButton = document.querySelector('#submit-button'); const addBankButton = document.querySelector('#add-bank'); const bankList = document.querySelector('#bank-list'); const bankListItems = document.querySelector('#bank-list-items'); const consent = document.querySelector('#full-number-consent'); const lastFourRow = document.querySelector('#last-four-row'); const fullRow = document.querySelector('#full-account-row'); const lastFour = document.querySelector('#accountLastFour'); const fullNumber = document.querySelector('#fullAccountNumber'); const stagedBanks = [];
+        const setStatus = (message, state = '') => { status.textContent = message; status.dataset.state = state; };
+        const showErrors = (errors) => { let firstInvalid; document.querySelectorAll('[data-error-for]').forEach(el => { const key = el.dataset.errorFor; const message = errors[key] || ''; el.textContent = message; const input = form.elements.namedItem(key); if (input) { input.setAttribute('aria-invalid', message ? 'true' : 'false'); if (message && !firstInvalid) firstInvalid = input; } }); return firstInvalid; };
+        const syncNumberMode = () => { const fullMode = consent.checked; lastFourRow.classList.toggle('is-hidden', fullMode); fullRow.classList.toggle('is-hidden', !fullMode); lastFour.required = false; fullNumber.required = false; if (fullMode) lastFour.value = ''; else fullNumber.value = ''; };
+        const currentData = () => Object.fromEntries(new FormData(form).entries());
+        const validateCurrent = () => { const validation = api.validateForm(currentData()); const firstInvalid = showErrors(validation.errors); if (!validation.valid) { setStatus('Please correct the highlighted fields. Do not enter secrets.', 'error'); firstInvalid?.focus(); } return validation; };
+        const renderStagedBanks = () => { bankList.hidden = stagedBanks.length === 0; bankListItems.replaceChildren(); stagedBanks.forEach((bank, index) => { const row = document.createElement('div'); row.className = 'bank-entry'; const description = document.createElement('div'); const title = document.createElement('strong'); title.textContent = bank.bankName || 'Bank record'; const detail = document.createElement('span'); detail.textContent = ` · ${bank.accountHolder || 'No holder'} · ${bank.accountLastFour ? `•••• ${bank.accountLastFour}` : 'Full number entered'}`; description.append(title, detail); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'secondary'; remove.textContent = 'Remove'; remove.addEventListener('click', () => { stagedBanks.splice(index, 1); renderStagedBanks(); setStatus(`${stagedBanks.length} bank record(s) ready to send.`); }); row.append(description, remove); bankListItems.append(row); }); };
+        const clearCurrentBank = () => { form.reset(); syncNumberMode(); showErrors({}); };
+        consent.addEventListener('change', syncNumberMode);
+        if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('PASTE_')) setStatus('Submission receiver is not configured. Do not submit until AM777 adds the Google Apps Script Web App URL.', 'error');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault(); if (submitButton.disabled) return;
+          const validation = validateCurrent(); if (!validation.valid) return;
+          const payload = api.buildBatch(stagedBanks, currentData()); submitButton.disabled = true; addBankButton.disabled = true; setStatus(`Sending ${payload.banks.length} verified bank record(s)…`);
+          try { const result = await api.submitRecord(payload); stagedBanks.splice(0); clearCurrentBank(); renderStagedBanks(); setStatus(`${payload.banks.length} bank record(s) sent to AM777 · Reference ${result.recordId}.`, 'success'); }
+          catch (error) { try { api.saveFallback(payload); setStatus(`${error.message} A limited recovery copy was saved locally for 24 hours; it excludes any full account number. Use “Download unsent JSON” only through AM777’s approved channel.`, 'error'); } catch { setStatus(`${error.message} This browser could not save a recovery copy. Your entered data remains in this open form; do not close it until you can use AM777’s approved channel.`, 'error'); } }
+          finally { submitButton.disabled = false; addBankButton.disabled = false; }
+        });
+        addBankButton.addEventListener('click', () => { const validation = validateCurrent(); if (!validation.valid) return; stagedBanks.push(api.buildPayload(currentData())); clearCurrentBank(); renderStagedBanks(); setStatus(`${stagedBanks.length} bank record(s) ready. Add another bank or complete the next record and submit all.`); document.querySelector('#bankName').focus(); });
+        document.querySelector('#download-json').addEventListener('click', () => { const records = api.getFallbackRecords(); if (!records.length) return setStatus('There are no unsent records to download.'); api.downloadJSON(records); setStatus(`${records.length} unsent record(s) downloaded as JSON.`); });
+        document.querySelector('#download-csv').addEventListener('click', () => { const records = api.getFallbackRecords(); if (!records.length) return setStatus('There are no unsent records to download.'); api.downloadCSV(records); setStatus(`${records.length} unsent record(s) downloaded as CSV.`); });
+        document.querySelector('#clear-local').addEventListener('click', () => { const count = api.getFallbackRecords().length; if (!count) return setStatus('There are no unsent records to clear.'); if (window.confirm(`Clear ${count} unsent record(s) from this browser? This cannot be undone.`)) { localStorage.removeItem(STORAGE_KEY); setStatus('Unsent local records cleared.'); } });
+      });
+    })();
+  </script>
+</body>
+</html>
